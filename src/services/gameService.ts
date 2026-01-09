@@ -1,5 +1,5 @@
 import { error } from 'node:console';
-import type { Board, Player, GameStatus, Cell } from '../types/game.js';
+import type { Board, Player, GameStatus, Cell, MoveResult, ValidateMoveResult } from '../types/game.js';
 
 export const checkWinner = (board: Board): GameStatus => {
 
@@ -43,7 +43,7 @@ export const checkWinner = (board: Board): GameStatus => {
     return { winner: null, gameOver: false };
 };
 
-export const validateMove = (board:Board, row:number, column: number)=>{
+export const validateMove = (board:Board, row:number, column: number):ValidateMoveResult=>{
     
     //check if board is valid
     if(!board || board[0]?.length ===0){
@@ -60,5 +60,20 @@ export const validateMove = (board:Board, row:number, column: number)=>{
     if(board[row]?.[column] !==null){
         return {isValid:false, error:"Cell is Already occupied"}
     }
-    return {isValid:true}
+    return {isValid:true, error:null}
+}
+
+export const makeMove = (board:Board, row:number, column:number, player:Player):MoveResult =>{
+    let newBoard: Board = structuredClone(board);
+    const moveValidResult = validateMove(newBoard, row, column)
+    if(moveValidResult.isValid){
+        let newBoardRow = newBoard[row]
+        if(newBoardRow){
+            newBoardRow[column] = player
+            newBoard[row] = newBoardRow
+        }
+        return {board:newBoard, success: moveValidResult.isValid, error:null};
+    } else {
+        return {board:newBoard, success: moveValidResult.isValid, error:moveValidResult.error};
+    }
 }
