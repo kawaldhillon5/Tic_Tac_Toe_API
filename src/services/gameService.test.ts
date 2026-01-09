@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkWinner, validateMove } from './gameService.js';
+import { checkWinner, makeMove, validateMove } from './gameService.js';
 import { Board } from '../types/game.js';
 
 describe('Game Logic Service', () => {
@@ -69,5 +69,40 @@ describe('Game Logic Service', () => {
         const resultLow = validateMove(board, 0, -1); 
         expect(resultLow.isValid).toBe(false);
         expect(resultLow.error).toBe('Coordinates are out of bounds');
+    });
+
+    it('should return a new board with the move applied without mutating the original', () => {
+        const originalBoard: Board = [
+            [null, null, null],
+            [null, null, null],
+            [null, null, null]
+        ];
+        
+        const row = 1;
+        const col = 1;
+        const player = 'X';
+
+        const newBoard = makeMove(originalBoard, row, col, player).board;
+
+        // Check if the move is there
+        expect(newBoard[row][col]).toBe('X');
+        
+        // Check if the original board is still empty (No Mutation!)
+        expect(originalBoard[row][col]).toBe(null);
+    });
+
+    it('should return an error message when attempting an invalid move', () => {
+        const board: Board = [
+            ['X', null, null],
+            [null, null, null],
+            [null, null, null]
+        ];
+        
+        // We try to move where 'X' already is
+        const result = makeMove(board, 0, 0, 'O');
+
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Cell is Already occupied'); // Matching your specific casing
+        expect(result.board).toEqual(board); // Board should remain unchanged
     });
 });
