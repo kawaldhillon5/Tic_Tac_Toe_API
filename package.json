@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "tsx watch src/app.ts",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.3",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
   }
 }
