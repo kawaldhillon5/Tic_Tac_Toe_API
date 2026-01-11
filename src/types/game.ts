@@ -17,3 +17,12 @@ export interface MoveResult {
     success: boolean;
     error: string | null;
 }
+
+export interface GameRow {
+    id: string;             // The UUID from Postgres
+    board: Cell[][];        // Your 2D array (parsed from JSONB)
+    current_turn: 'X' | 'O';
+    status: 'ongoing' | 'won' | 'draw';
+    winner: 'X' | 'O' | null;
+    created_at: Date;
+}
