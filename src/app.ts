@@ -1,6 +1,8 @@
 import express, {type Application, type Request, type Response } from 'express';
 import dotenv from 'dotenv';
 
+import gameRoutes from './routes/gameRoutes.js'
+
 dotenv.config();
 
 const app: Application = express();
@@ -11,6 +13,8 @@ app.use(express.json());
 app.get('/', (req: Request, res: Response) => {
   res.send('Tic-Tac-Toe Server is Running!');
 });
+
+app.use('/api/game', gameRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server ready at http://localhost:${PORT}`);
