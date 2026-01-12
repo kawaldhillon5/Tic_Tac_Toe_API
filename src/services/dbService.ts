@@ -3,8 +3,6 @@ import type { Board, GameRow } from '../types/game.js';
 
 export const createGame = async (): Promise<string> => {
 
-    const date  = new Date()
-
     const board: Board = [
         [null, null, null],
         [null, null, null],
@@ -12,7 +10,7 @@ export const createGame = async (): Promise<string> => {
     ];
 
 
-    const queryText = 'INSERT INTO games (board, created_at) VALUES ($1, $2) RETURNING id';
+    const queryText = 'INSERT INTO games (board, created_at) VALUES ($1) RETURNING id';
     
     const res = await pool.query(queryText, [JSON.stringify(board)]);
 
