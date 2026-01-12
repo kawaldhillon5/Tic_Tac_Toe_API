@@ -1,5 +1,4 @@
-import { error } from 'node:console';
-import type { Board, Player, GameStatus, Cell, MoveResult, ValidateMoveResult } from '../types/game.js';
+import type { Board, Player, GameStatus, MoveResult, ValidateMoveResult } from '../types/game.js';
 
 export const checkWinner = (board: Board): GameStatus => {
 
@@ -7,7 +6,7 @@ export const checkWinner = (board: Board): GameStatus => {
     for (let i = 0; i < 3; i++) {
         const row = board[i];
         if (row && row[0] && row[0] === row[1] && row[0] === row[2]) {
-            return { winner: row[0], gameOver: true };
+            return { winner: row[0], gameOver: true, gameStatus: 'won' };
         }
     } 
 
@@ -18,7 +17,7 @@ export const checkWinner = (board: Board): GameStatus => {
         const cell2 = board[2]?.[i];
 
         if (cell0 && cell0 === cell1 && cell0 === cell2) {
-            return { winner: cell0, gameOver: true };
+            return { winner: cell0, gameOver: true, gameStatus: 'won' };
         }
     }
 
@@ -26,21 +25,21 @@ export const checkWinner = (board: Board): GameStatus => {
     const mid = board[1]?.[1];
     if (mid) {
         if (board[0]?.[0] === mid && board[2]?.[2] === mid) {
-            return { winner: mid, gameOver: true };
+            return { winner: mid, gameOver: true, gameStatus:"won" };
         }
         if (board[0]?.[2] === mid && board[2]?.[0] === mid) {
-            return { winner: mid, gameOver: true };
+            return { winner: mid, gameOver: true, gameStatus:"won" };
         }
     }
 
     // 4. Check Draw
     const isDraw = board.flat().every(cell => cell !== null);
     if (isDraw) {
-        return { winner: 'Draw', gameOver: true };
+        return { winner: null, gameOver: true, gameStatus: "draw" };
     }
 
     // Final Fallback
-    return { winner: null, gameOver: false };
+    return { winner: null, gameOver: false, gameStatus: "ongoing" };
 };
 
 export const validateMove = (board:Board, row:number, column: number):ValidateMoveResult=>{
