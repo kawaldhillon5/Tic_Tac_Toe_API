@@ -2,7 +2,8 @@ import express from "express";
 import type { Request, Response } from 'express';
 import * as GameService from '../services/gameService.js';
 import * as DbService from '../services/dbService.js';
-import type { Board, GameRow, GameStatus } from "../types/game.js";
+import type { GameStatus } from "../types/game.js";
+import { getIO } from "../services/socketService.js";
 
 
 export const handleMove = async (req: Request, res: Response) => {
@@ -35,6 +36,7 @@ export const handleMove = async (req: Request, res: Response) => {
         } 
 
         const updatedGame = await DbService.updateGame(game);
+        getIO().to(gameId).emit('game-updated', updatedGame);
 
         return res.status(200).json({
             success: true,
