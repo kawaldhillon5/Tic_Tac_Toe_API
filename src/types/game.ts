@@ -3,8 +3,9 @@ export type Cell = Player | null;
 export type Board = Cell[][];
 
 export interface GameStatus {
-    winner: Player | 'Draw' | null;
+    winner: Player | null;
     gameOver: boolean;
+    gameStatus: 'ongoing' | 'won' | 'draw'
 }
 
 export interface ValidateMoveResult {
@@ -19,8 +20,8 @@ export interface MoveResult {
 }
 
 export interface GameRow {
-    id: string;             // The UUID from Postgres
-    board: Cell[][];        // Your 2D array (parsed from JSONB)
+    id: string;             
+    board: Board;        
     current_turn: 'X' | 'O';
     status: 'ongoing' | 'won' | 'draw';
     winner: 'X' | 'O' | null;
