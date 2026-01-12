@@ -20,10 +20,11 @@ export const createGame = async (): Promise<string> => {
 export const updateGame = async (game: GameRow): Promise<GameRow> =>{
     const queryText = `
         UPDATE games 
-        SET board = $1, current_turn = $2, status = $3, winner = $4 
+        SET board = $1, current_turn = $2, status = $3, winner = $4, updated_at = NOW() 
         WHERE id = $5 
         RETURNING *;
     `;
+    
     
     const values = [
         JSON.stringify(game.board), 
