@@ -52,3 +52,14 @@ export const getGameById =  async (id: string): Promise<GameRow | null> =>{
 
     return res.rows[0];
 } 
+
+export const deleteOldGames = async (hours: number): Promise<number> => {
+    const queryText = `
+        DELETE FROM games 
+        WHERE updated_at < NOW() - ($1 || ' hours')::INTERVAL;
+    `;
+    
+    const res = await pool.query(queryText, [hours]);
+    
+    return res.rowCount || 0;
+};
