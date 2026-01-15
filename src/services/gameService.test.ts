@@ -100,7 +100,7 @@ describe('Game Logic Service', () => {
         
         // We try to move where 'X' already is
         const result = makeMove(board, 0, 0, 'O');
-
+            
         expect(result.success).toBe(false);
         expect(result.error).toBe('Cell is Already occupied'); // Matching your specific casing
         expect(result.board).toEqual(board); // Board should remain unchanged
