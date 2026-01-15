@@ -30,3 +30,6 @@ Thumbs.db
 
 # Testing
 coverage/
+
+.db
+tictactoe.db
