@@ -1,30 +1,54 @@
-import pool from '../config/db.js';
+import db from '../config/db.js';
+// import pool from '../config/db.js';
 import type { Board, GameRow } from '../types/game.js';
-
+import { v4 as uuidv4 } from 'uuid';
 export const createGame = async (): Promise<string> => {
-
+    const id  = uuidv4();
     const board: Board = [
         [null, null, null],
         [null, null, null],
         [null, null, null]
     ];
 
-
-    const queryText = 'INSERT INTO games (board, created_at) VALUES ($1) RETURNING id';
+    //Postgresql
+    // const queryText = 'INSERT INTO games (board, created_at) VALUES ($1) RETURNING id';
     
-    const res = await pool.query(queryText, [JSON.stringify(board)]);
+    // const res = await pool.query(queryText, [JSON.stringify(board)]);
 
-    return res.rows[0].id;
+    // return res.rows[0].id;
+
+    //SQLite
+
+    const stmt = db.prepare('INSERT INTO games (id, board) VALUES (?, ?)');
+    stmt.run(id, JSON.stringify(board));
+    
+    return id;
 };
 
 export const updateGame = async (game: GameRow): Promise<GameRow> =>{
-    const queryText = `
+    //postgreSql
+    // const queryText = `
+    //     UPDATE games 
+    //     SET board = $1, current_turn = $2, status = $3, winner = $4, updated_at = NOW() 
+    //     WHERE id = $5 
+    //     RETURNING *;
+    // `;
+
+    // const res = await pool.query(queryText, values);
+
+    // if (res.rows.length === 0) {
+    //     throw new Error('Could not find game to update');
+    // }
+
+    // return res.rows[0];
+
+    //sqlite
+
+    const stmt = db.prepare(`
         UPDATE games 
-        SET board = $1, current_turn = $2, status = $3, winner = $4, updated_at = NOW() 
-        WHERE id = $5 
-        RETURNING *;
-    `;
-    
+        SET board = ?, current_turn = ?, status = ?, winner = ?, updated_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    `); 
     
     const values = [
         JSON.stringify(game.board), 
@@ -34,33 +58,59 @@ export const updateGame = async (game: GameRow): Promise<GameRow> =>{
         game.id
     ];
 
-    const res = await pool.query(queryText, values);
+    const info = stmt.run(values);
     
-    if (res.rows.length === 0) {
+    if (info.changes === 0) {
         throw new Error('Could not find game to update');
     }
 
-    return res.rows[0]; 
+    return game;
+    
+     
 }
 
 export const getGameById =  async (id: string): Promise<GameRow | null> =>{
-    const queryText  = 'SELECT * FROM games WHERE id = $1';
-    const res = await pool.query(queryText, [id])
+    // const queryText  = 'SELECT * FROM games WHERE id = $1';
+    // const res = await pool.query(queryText, [id])
 
-    if (res.rows.length === 0) {
-        return null; 
-    }
+    // if (res.rows.length === 0) {
+    //     return null; 
+    // }
 
-    return res.rows[0];
+    // return res.rows[0];
+
+    //sqlite
+    const stmt = db.prepare('SELECT * FROM games WHERE id = ?');
+    const row = stmt.get(id) as any;
+
+    if (!row) return null;
+
+    // We manually parse the board string back into a 2D array
+    return {
+        ...row,
+        board: JSON.parse(row.board)
+    };
 } 
 
 export const deleteOldGames = async (hours: number): Promise<number> => {
-    const queryText = `
+    //postgresql
+    // const queryText = `
+    //     DELETE FROM games 
+    //     WHERE updated_at < NOW() - ($1 || ' hours')::INTERVAL;
+    // `;
+    
+    // const res = await pool.query(queryText, [hours]);
+    
+    // return res.rowCount || 0;
+
+
+    //sqlite
+    const stmt = db.prepare(`
         DELETE FROM games 
-        WHERE updated_at < NOW() - ($1 || ' hours')::INTERVAL;
-    `;
+        WHERE updated_at < datetime('now', ?)
+    `);
     
-    const res = await pool.query(queryText, [hours]);
+    const info = stmt.run(`-${hours} hours`);
     
-    return res.rowCount || 0;
+    return info.changes;
 };
