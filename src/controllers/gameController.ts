@@ -5,8 +5,14 @@ import * as DbService from '../services/dbService.js';
 import type { GameStatus } from "../types/game.js";
 import { getIO } from "../services/socketService.js";
 
+interface HandleMoveRequestBody {
+    gameId: string;
+    row: number;
+    column:number;
+    player:string
+}
 
-export const handleMove = async (req: Request, res: Response) => {
+export const handleMove = async (req: Request<{},{},HandleMoveRequestBody>, res: Response) => {
     const { gameId, row, column, player } = req.body;
 
     try {
@@ -15,11 +21,11 @@ export const handleMove = async (req: Request, res: Response) => {
             return res.status(404).json({ success: false, error: 'Game not found' });
         }
 
-        if (game.current_turn !== player) {
+        if (game.current_turn?.username !== player) {
             return res.status(400).json({ success: false, error: "Not your turn!" });
         }
 
-        const result = GameService.makeMove(game.board, row, column, player);
+        const result = GameService.makeMove(game.board, row, column, game.current_turn);
         if (!result.success) {
             return res.status(400).json({ success: result.success, error: result.error });
         }
@@ -29,10 +35,10 @@ export const handleMove = async (req: Request, res: Response) => {
         const gameCheckResult: GameStatus = GameService.checkWinner(result.board);
 
         game.status = gameCheckResult.gameStatus
-        game.winner = gameCheckResult.winner
+        game.winner = game.player1?.mark === gameCheckResult.winner ? game.player1 : game.player2;
 
         if(gameCheckResult.gameOver === false){
-            game.current_turn = player === "X" ? "O" : "X"
+            game.current_turn = game.player1?.username === player ? game.player2 : game.player1; 
         } 
 
         const updatedGame = await DbService.updateGame(game);
@@ -49,19 +55,41 @@ export const handleMove = async (req: Request, res: Response) => {
     }
 };
 
-export const handleCreateGame = async (req: Request, resp: Response) =>{
+export const handleFindGame = async (req: Request, resp: Response) =>{
+    const {username} = req.body;
+    console.log("Trying to find a Game for user: ", username);
     try {
-        const gameId = await DbService.createGame();
+
+        const exixtingGame = await DbService.getGameinWaiting(username);
+
+        if (exixtingGame){
+            console.log("Found Existin Game")
+            exixtingGame.player2 = {username:username, mark:'O'}
+            exixtingGame.status = "ongoing";
+            exixtingGame.current_turn = exixtingGame.player1;
+
+            const updatedGame = await DbService.updateGame(exixtingGame);
+
+            return resp.status(200).json({
+                success: true,
+                gameId: updatedGame.id,
+            });
+
+        }
+
+        console.log("Creating New Game")
+        const gameId = await DbService.createGame(username);
     
         resp.status(201).json({
             success:true,
             gameId: gameId
         });
+
     } catch (err){
-        console.error("Error Creating game: ", err);
+        console.error("Error Setting game: ", err);
         resp.status(500).json({
             success: false,
-            message: "Failed to initilize new game"
+            message: "Error Setting game"
         });
     }
 }
