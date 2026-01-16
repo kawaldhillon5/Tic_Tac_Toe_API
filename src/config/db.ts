@@ -28,13 +28,14 @@ const db: Database.Database = new Database('tictactoe.db', { verbose: console.lo
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS games (
-    id TEXT PRIMARY KEY,
+    id Text PRIMARY KEY ,
     board TEXT NOT NULL,
-    current_turn TEXT NOT NULL DEFAULT 'X',
-    status TEXT NOT NULL DEFAULT 'ongoing',
-    winner TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    player1 JSONB,
+    player2 JSONB,
+    current_turn JSONB,
+    status TEXT NOT NULL DEFAULT 'waiting',
+    winner JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
