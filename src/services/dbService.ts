@@ -1,8 +1,10 @@
+import { json } from 'stream/consumers';
 import db from '../config/db.js';
 // import pool from '../config/db.js';
 import type { Board, GameRow } from '../types/game.js';
 import { v4 as uuidv4 } from 'uuid';
-export const createGame = async (): Promise<string> => {
+
+export const createGame = async (username:string): Promise<string> => {
     const id  = uuidv4();
     const board: Board = [
         [null, null, null],
@@ -19,11 +21,13 @@ export const createGame = async (): Promise<string> => {
 
     //SQLite
 
-    const stmt = db.prepare('INSERT INTO games (id, board) VALUES (?, ?)');
-    stmt.run(id, JSON.stringify(board));
+    const stmt = db.prepare('INSERT INTO games (id, board, player1) VALUES (?, ?, ?)');
+    stmt.run(id, JSON.stringify(board), JSON.stringify({username:username, mark:'X'}));
     
     return id;
 };
+
+
 
 export const updateGame = async (game: GameRow): Promise<GameRow> =>{
     //postgreSql
@@ -46,15 +50,17 @@ export const updateGame = async (game: GameRow): Promise<GameRow> =>{
 
     const stmt = db.prepare(`
         UPDATE games 
-        SET board = ?, current_turn = ?, status = ?, winner = ?, updated_at = CURRENT_TIMESTAMP 
+        SET board = ?, player1 = ?, player2 = ?,  current_turn = ?, status = ?, winner = ? 
         WHERE id = ?
     `); 
     
     const values = [
         JSON.stringify(game.board), 
-        game.current_turn, 
+        JSON.stringify(game.player1),
+        JSON.stringify(game.player2),
+        JSON.stringify(game.current_turn), 
         game.status, 
-        game.winner, 
+        JSON.stringify(game.winner), 
         game.id
     ];
 
@@ -67,6 +73,22 @@ export const updateGame = async (game: GameRow): Promise<GameRow> =>{
     return game;
     
      
+}
+
+export const getGameinWaiting = async (username:string): Promise<GameRow | null> =>{
+    const stmt = db.prepare(`
+        SELECT * FROM games WHERE status = 'waiting' AND player1 NOT LIKE ? LIMIT 1;
+    `);
+    const row = stmt.get(`%${username}%`) as any;
+    
+    if (!row) return null;
+
+    return {
+        ...row,
+        board: JSON.parse(row.board),
+        player1: JSON.parse(row.player1)
+    };
+
 }
 
 export const getGameById =  async (id: string): Promise<GameRow | null> =>{
@@ -88,7 +110,10 @@ export const getGameById =  async (id: string): Promise<GameRow | null> =>{
     // We manually parse the board string back into a 2D array
     return {
         ...row,
-        board: JSON.parse(row.board)
+        board: JSON.parse(row.board),
+        player1: JSON.parse(row.player1),
+        player2: JSON.parse(row.player2),
+        current_turn: JSON.parse(row.current_turn)
     };
 } 
 
@@ -107,7 +132,7 @@ export const deleteOldGames = async (hours: number): Promise<number> => {
     //sqlite
     const stmt = db.prepare(`
         DELETE FROM games 
-        WHERE updated_at < datetime('now', ?)
+        WHERE created_at < datetime('now', ?)
     `);
     
     const info = stmt.run(`-${hours} hours`);
