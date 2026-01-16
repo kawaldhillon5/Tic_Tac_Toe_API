@@ -68,7 +68,7 @@ export const makeMove = (board:Board, row:number, column:number, player:Player):
     if(moveValidResult.isValid){
         let newBoardRow = newBoard[row]
         if(newBoardRow){
-            newBoardRow[column] = player
+            newBoardRow[column] = player.mark
             newBoard[row] = newBoardRow
         }
         return {board:newBoard, success: moveValidResult.isValid, error:null};
